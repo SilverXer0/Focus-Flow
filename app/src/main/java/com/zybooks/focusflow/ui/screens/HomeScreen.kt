@@ -5,6 +5,9 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,27 +25,39 @@ import com.zybooks.focusflow.ui.viewmodel.HomeViewModel
 import com.zybooks.focusflow.ui.viewmodel.TimerPhaseType
 import kotlin.math.max
 import kotlinx.coroutines.delay
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     nav: NavController,
-    vm: HomeViewModel = viewModel()
+    vm: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    var menuOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("FocusFlow") },
                 actions = {
-                    TextButton(onClick = { vm.toggleMenu() }) { Text("⋮") }
-                    DropdownMenu(expanded = state.menuExpanded, onDismissRequest = { vm.toggleMenu(false) }) {
-                        DropdownMenuItem(text = { Text("Settings") }, onClick = { vm.toggleMenu(false); nav.navigate(Routes.SETTINGS) })
-                        DropdownMenuItem(text = { Text("Stats") }, onClick = { vm.toggleMenu(false); nav.navigate(Routes.STATS) })
-                        DropdownMenuItem(text = { Text("Log") }, onClick = { vm.toggleMenu(false); nav.navigate(Routes.LOG) })
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
                     }
-                }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Break Coach") },
+                            onClick = {
+                                menuOpen = false
+                                nav.navigate(Routes.BREAK) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { inner ->
@@ -50,13 +65,14 @@ fun HomeScreen(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Timer ring
+            Spacer(Modifier.height(8.dp))
+
             Box(
-                modifier = Modifier.size(240.dp),
+                modifier = Modifier.size(260.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (state.isRunning) {
@@ -64,77 +80,82 @@ fun HomeScreen(
                         timeDurationMillis = state.remainingMillis.toInt().coerceAtLeast(1),
                         isRunning = state.isRunning,
                         modifier = Modifier.fillMaxSize(),
-                        stroke = 14.dp,
+                        stroke = 18.dp,
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     CircularProgressIndicator(
                         progress = { 1f },
-                        strokeWidth = 14.dp,
+                        strokeWidth = 18.dp,
                         modifier = Modifier.matchParentSize(),
                         color = MaterialTheme.colorScheme.surfaceVariant
                     )
                     CircularProgressIndicator(
                         progress = {
                             (state.remainingMillis.toFloat() /
-                                state.totalMillis.coerceAtLeast(1L).toFloat()).coerceIn(0f, 1f)
+                                    state.totalMillis.coerceAtLeast(1L).toFloat()).coerceIn(0f, 1f)
                         },
-                        strokeWidth = 14.dp,
+                        strokeWidth = 18.dp,
                         modifier = Modifier.matchParentSize(),
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = Color.Transparent
+                        trackColor = Color.Transparent,
+                        strokeCap = StrokeCap.Butt
                     )
                 }
-                Text(
-                    text = formatMillis(state.remainingMillis),
-                    style = MaterialTheme.typography.headlineMedium
-                )
+                Text(text = formatMillis(state.remainingMillis), style = MaterialTheme.typography.displaySmall)
             }
+
+            Spacer(Modifier.height(16.dp))
+
             Text(
-                text = when (state.phaseType) {
-                    TimerPhaseType.Focus -> "Focus"
-                    TimerPhaseType.ShortBreak -> "Short Break"
-                    TimerPhaseType.LongBreak -> "Long Break"
-                },
-                style = MaterialTheme.typography.titleMedium
+                text = "Focus",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Spacer(Modifier.height(20.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
                 val primaryLabel = if (state.isRunning) "Pause" else "Start"
-                Button(onClick = { if (state.isRunning) vm.pause() else vm.start() }) { Text(primaryLabel) }
-                OutlinedButton(onClick = { vm.stop() }) { Text("Stop") }
+                Button(
+                    onClick = { if (state.isRunning) vm.pause() else vm.start() },
+                    shape = RoundedCornerShape(28.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) { Text(primaryLabel) }
+
+                OutlinedButton(
+                    onClick = { vm.stop() },
+                    shape = RoundedCornerShape(28.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                ) { Text("Stop") }
             }
 
-            SimpleChipRow {
+            Spacer(Modifier.height(18.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 AssistChip(onClick = { vm.selectPreset(25, 5) }, label = { Text("25/5") })
                 AssistChip(onClick = { vm.selectPreset(50, 10) }, label = { Text("50/10") })
                 AssistChip(onClick = { vm.openCustomPicker() }, label = { Text("Custom…") })
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Auto-start next interval")
-                Switch(checked = state.autoStartNext, onCheckedChange = { vm.setAutoStart(it) })
-            }
+            Spacer(Modifier.height(22.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "Today: ${state.todaySessionCount} sessions, ${state.todayMinutes} min",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+            ToggleCard(
+                title = "Auto-start next interval",
+                checked = state.autoStartNext,
+                onCheckedChange = vm::setAutoStart
             )
 
-            state.snackbarMessage?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
-        }
-    }
-
-    LaunchedEffect(state.navigateToBreakCoach) {
-        if (state.navigateToBreakCoach) {
-            nav.navigate(Routes.BREAK)
+            Spacer(Modifier.weight(1f))
+            Divider()
+            Text(
+                text = "Today: ${state.todaySessionCount} sessions, ${state.todayMinutes} min",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp)
+            )
         }
     }
 }
@@ -182,6 +203,42 @@ fun AnimatedTimeIndicator(
             progress = 1f
             delay(1)
             progress = 0f
+        }
+    }
+}
+
+@Composable
+private fun ToggleCard(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = checked, onCheckedChange = onCheckedChange)
+        }
+    }
+}
+
+fun NavController.navigateHome() {
+    val popped = popBackStack(route = Routes.HOME, inclusive = false)
+    if (!popped) {
+        navigate(Routes.HOME) {
+            popUpTo(graph.startDestinationId) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
         }
     }
 }

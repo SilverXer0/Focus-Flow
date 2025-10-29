@@ -11,11 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.zybooks.focusflow.ui.screens.HomeScreen
+import com.zybooks.focusflow.ui.screens.navigateHome
 
 object Routes {
     const val HOME = "home"
@@ -34,14 +38,50 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FocusFlowApp() {
-    MaterialTheme {
-        val nav = rememberNavController()
-        NavHost(navController = nav, startDestination = Routes.HOME) {
-            composable(Routes.HOME) { HomeScreen(nav) }
-            composable(Routes.BREAK) { PlaceholderScreen("Break Coach (coming soon)") }
-            composable(Routes.LOG) { PlaceholderScreen("Sessions Log (coming soon)") }
-            composable(Routes.STATS) { PlaceholderScreen("Stats (coming soon)") }
-            composable(Routes.SETTINGS) { PlaceholderScreen("Settings (coming soon)") }
+    val nav = rememberNavController()
+    val currentRoute =
+        nav.currentBackStackEntryFlow.collectAsState(initial = nav.currentBackStackEntry)
+            .value?.destination?.route
+
+    val items = listOf(Routes.HOME, Routes.STATS, Routes.LOG, Routes.SETTINGS)
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                items.forEach { route ->
+                    val selected = currentRoute == route
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            if (route == Routes.HOME) {
+                                nav.navigateHome()
+                            } else if (!selected) {
+                                nav.navigate(route) {
+                                    popUpTo(Routes.HOME) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        },
+                        icon = { /* no icon for now */ },
+                        label = { Text(route.replaceFirstChar { it.uppercase() }) }
+                    )
+                }
+            }
+        }
+    ) { inner ->
+        MaterialTheme {
+            NavHost(
+                navController = nav,
+                startDestination = Routes.HOME,
+                modifier = Modifier.padding(inner)
+            ) {
+                composable(Routes.HOME) { HomeScreen(nav) }
+                composable(Routes.BREAK) { PlaceholderScreen("Break Coach (coming soon)") }
+                composable(Routes.LOG) { PlaceholderScreen("Sessions Log (coming soon)") }
+                composable(Routes.STATS) { PlaceholderScreen("Stats (coming soon)") }
+                composable(Routes.SETTINGS) { PlaceholderScreen("Settings (coming soon)") }
+            }
         }
     }
 }
