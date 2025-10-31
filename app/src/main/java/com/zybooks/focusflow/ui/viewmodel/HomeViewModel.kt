@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import android.os.SystemClock
 
+import com.zybooks.focusflow.data.SettingsRepository
+import androidx.lifecycle.ViewModelProvider
+
 enum class TimerPhaseType { Focus, ShortBreak, LongBreak }
 
 data class HomeUiState(
@@ -23,12 +26,35 @@ data class HomeUiState(
     val menuExpanded: Boolean = false
 )
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(private val settingsRepository: SettingsRepository? = null) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
     private var ticker: Job? = null
     private var lastTickRef: Long = 0L
+
+    init {
+        settingsRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.settingsFlow.collect { settings ->
+                    _uiState.update { current ->
+                        if (current.isRunning) {
+                            current.copy(
+                                autoStartNext = settings.autoStartNext
+                            )
+                        } else {
+                            val total = settings.focusMinutes * 60_000L
+                            current.copy(
+                                autoStartNext = settings.autoStartNext,
+                                totalMillis = total,
+                                remainingMillis = total
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     fun toggleMenu(force: Boolean? = null) {
         _uiState.update { it.copy(menuExpanded = force ?: !it.menuExpanded) }
@@ -59,6 +85,11 @@ class HomeViewModel : ViewModel() {
 
     fun setAutoStart(enabled: Boolean) {
         _uiState.update { it.copy(autoStartNext = enabled) }
+        settingsRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.updateAutoStart(enabled)
+            }
+        }
     }
 
     fun selectPreset(focusMin: Int, breakMin: Int) {
@@ -113,6 +144,16 @@ class HomeViewModel : ViewModel() {
                 )
             } else {
                 current.copy(remainingMillis = next)
+            }
+        }
+    }
+    companion object {
+        fun factory(repo: SettingsRepository): ViewModelProvider.Factory {
+            return object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return HomeViewModel(repo) as T
+                }
             }
         }
     }

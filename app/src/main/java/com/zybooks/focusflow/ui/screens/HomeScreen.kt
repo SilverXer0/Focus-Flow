@@ -17,10 +17,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.zybooks.focusflow.Routes
+import com.zybooks.focusflow.data.SettingsRepository
 import com.zybooks.focusflow.ui.viewmodel.HomeViewModel
 import com.zybooks.focusflow.ui.viewmodel.TimerPhaseType
 import kotlin.math.max
@@ -31,6 +33,10 @@ fun HomeScreen(
     nav: NavController,
     vm: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val context = LocalContext.current
+    val repo = remember { SettingsRepository(context) }
+    val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(repo))
+
     val state by vm.uiState.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
 
