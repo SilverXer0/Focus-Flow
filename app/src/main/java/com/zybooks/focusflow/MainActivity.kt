@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.zybooks.focusflow.ui.screens.HomeScreen
+import com.zybooks.focusflow.ui.screens.SettingsScreen
 import com.zybooks.focusflow.ui.screens.navigateHome
 
 object Routes {
@@ -80,7 +81,7 @@ fun FocusFlowApp() {
                 composable(Routes.BREAK) { PlaceholderScreen("Break Coach (coming soon)") }
                 composable(Routes.LOG) { PlaceholderScreen("Sessions Log (coming soon)") }
                 composable(Routes.STATS) { PlaceholderScreen("Stats (coming soon)") }
-                composable(Routes.SETTINGS) { PlaceholderScreen("Settings (coming soon)") }
+                composable(Routes.SETTINGS) { SettingsScreen() }
             }
         }
     }
