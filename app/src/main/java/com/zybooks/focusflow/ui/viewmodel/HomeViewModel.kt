@@ -7,9 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import android.os.SystemClock
-
 import com.zybooks.focusflow.data.SettingsRepository
 import androidx.lifecycle.ViewModelProvider
+import com.zybooks.focusflow.data.FocusSession
+import com.zybooks.focusflow.data.SessionRepository
 
 enum class TimerPhaseType { Focus, ShortBreak, LongBreak }
 
@@ -26,7 +27,10 @@ data class HomeUiState(
     val menuExpanded: Boolean = false
 )
 
-class HomeViewModel(private val settingsRepository: SettingsRepository? = null) : ViewModel() {
+class HomeViewModel(
+    private val settingsRepository: SettingsRepository? = null,
+    private val sessionRepository: SessionRepository? = null
+) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
@@ -73,6 +77,7 @@ class HomeViewModel(private val settingsRepository: SettingsRepository? = null) 
     }
 
     fun stop() {
+        val currentState = _uiState.value
         stopTicker()
         _uiState.update {
             it.copy(
@@ -80,6 +85,21 @@ class HomeViewModel(private val settingsRepository: SettingsRepository? = null) 
                 remainingMillis = it.totalMillis,
                 snackbarMessage = "Session stopped"
             )
+        }
+        val ranMillis = currentState.totalMillis - currentState.remainingMillis
+        if (ranMillis > 5_000) {
+            val mins = (ranMillis / 60_000L).toInt().coerceAtLeast(1)
+            viewModelScope.launch {
+                sessionRepository?.addSession(
+                    FocusSession(
+                        id = System.currentTimeMillis(),
+                        startTimeMillis = System.currentTimeMillis() - ranMillis,
+                        durationMinutes = mins,
+                        type = currentState.phaseType.name,
+                        completed = false
+                    )
+                )
+            }
         }
     }
 
@@ -134,6 +154,17 @@ class HomeViewModel(private val settingsRepository: SettingsRepository? = null) 
             val next = (current.remainingMillis - deltaMs).coerceAtLeast(0L)
             if (next == 0L) {
                 val addedMin = (current.totalMillis / 60_000L).toInt()
+                viewModelScope.launch {
+                    sessionRepository?.addSession(
+                        FocusSession(
+                            id = System.currentTimeMillis(),
+                            startTimeMillis = System.currentTimeMillis() - current.totalMillis,
+                            durationMinutes = addedMin,
+                            type = current.phaseType.name,
+                            completed = true
+                        )
+                    )
+                }
                 current.copy(
                     remainingMillis = current.totalMillis,
                     isRunning = current.autoStartNext,
@@ -148,11 +179,14 @@ class HomeViewModel(private val settingsRepository: SettingsRepository? = null) 
         }
     }
     companion object {
-        fun factory(repo: SettingsRepository): ViewModelProvider.Factory {
+        fun factory(
+            settingsRepo: SettingsRepository,
+            sessionRepo: SessionRepository
+        ): ViewModelProvider.Factory {
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return HomeViewModel(repo) as T
+                    return HomeViewModel(settingsRepo, sessionRepo) as T
                 }
             }
         }

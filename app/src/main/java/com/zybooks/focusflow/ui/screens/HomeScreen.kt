@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.zybooks.focusflow.Routes
 import com.zybooks.focusflow.data.SettingsRepository
+import com.zybooks.focusflow.data.SessionRepository
 import com.zybooks.focusflow.ui.viewmodel.HomeViewModel
 import com.zybooks.focusflow.ui.viewmodel.TimerPhaseType
 import kotlin.math.max
@@ -30,12 +31,12 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    nav: NavController,
-    vm: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    nav: NavController
 ) {
     val context = LocalContext.current
-    val repo = remember { SettingsRepository(context) }
-    val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(repo))
+    val settingsRepo = remember { SettingsRepository(context) }
+    val sessionRepo = remember { SessionRepository(context) }
+    val vm: HomeViewModel = viewModel(factory = HomeViewModel.factory(settingsRepo, sessionRepo))
 
     val state by vm.uiState.collectAsStateWithLifecycle()
     var menuOpen by remember { mutableStateOf(false) }
