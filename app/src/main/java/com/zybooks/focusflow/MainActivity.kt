@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.zybooks.focusflow.ui.screens.BreakCoachScreen
 import com.zybooks.focusflow.ui.screens.HomeScreen
 import com.zybooks.focusflow.ui.screens.SettingsScreen
 import com.zybooks.focusflow.ui.screens.navigateHome
@@ -78,7 +79,7 @@ fun FocusFlowApp() {
                 modifier = Modifier.padding(inner)
             ) {
                 composable(Routes.HOME) { HomeScreen(nav) }
-                composable(Routes.BREAK) { PlaceholderScreen("Break Coach (coming soon)") }
+                composable(Routes.BREAK) { BreakCoachScreen(nav) }
                 composable(Routes.LOG) { PlaceholderScreen("Sessions Log (coming soon)") }
                 composable(Routes.STATS) { PlaceholderScreen("Stats (coming soon)") }
                 composable(Routes.SETTINGS) { SettingsScreen() }
