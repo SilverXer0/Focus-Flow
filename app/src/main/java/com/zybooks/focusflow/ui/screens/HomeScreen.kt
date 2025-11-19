@@ -82,34 +82,16 @@ fun HomeScreen(
                 modifier = Modifier.size(260.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (state.isRunning) {
-                    AnimatedTimeIndicator(
-                        timeDurationMillis = state.remainingMillis.toInt().coerceAtLeast(1),
-                        isRunning = state.isRunning,
-                        modifier = Modifier.fillMaxSize(),
-                        stroke = 18.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    CircularProgressIndicator(
-                        progress = { 1f },
-                        strokeWidth = 18.dp,
-                        modifier = Modifier.matchParentSize(),
-                        color = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                    CircularProgressIndicator(
-                        progress = {
-                            (state.remainingMillis.toFloat() /
-                                    state.totalMillis.coerceAtLeast(1L).toFloat()).coerceIn(0f, 1f)
-                        },
-                        strokeWidth = 18.dp,
-                        modifier = Modifier.matchParentSize(),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = Color.Transparent,
-                        strokeCap = StrokeCap.Butt
-                    )
-                }
-                Text(text = formatMillis(state.remainingMillis), style = MaterialTheme.typography.displaySmall)
+                TimerRing(
+                    totalMillis = state.totalMillis,
+                    remainingMillis = state.remainingMillis,
+                    modifier = Modifier.fillMaxSize(),
+                    stroke = 18.dp
+                )
+                Text(
+                    text = formatMillis(state.remainingMillis),
+                    style = MaterialTheme.typography.displaySmall
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -180,38 +162,39 @@ private fun formatMillis(ms: Long): String {
 }
 
 @Composable
-fun AnimatedTimeIndicator(
-    timeDurationMillis: Int,
-    isRunning: Boolean,
+private fun TimerRing(
+    totalMillis: Long,
+    remainingMillis: Long,
     modifier: Modifier = Modifier,
-    stroke: Dp = 20.dp,
-    color: Color = MaterialTheme.colorScheme.primary
+    stroke: Dp = 18.dp
 ) {
-    var progress by remember { mutableFloatStateOf(1f) }
-    val progressAnimation by animateFloatAsState(
-        targetValue = progress,
+    val rawProgress =
+        if (totalMillis > 0L) remainingMillis.toFloat() / totalMillis.toFloat() else 0f
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = rawProgress.coerceIn(0f, 1f),
         animationSpec = tween(
-            durationMillis = timeDurationMillis,
+            durationMillis = 250,
             easing = LinearEasing
         ),
-        label = "Progress indicator"
+        label = "timer-ring-progress"
     )
 
     CircularProgressIndicator(
-        progress = { progressAnimation },
-        modifier = modifier,
+        progress = { 1f },
         strokeWidth = stroke,
-        color = color,
-        strokeCap = StrokeCap.Butt
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceVariant
     )
 
-    LaunchedEffect(isRunning, timeDurationMillis) {
-        if (isRunning) {
-            progress = 1f
-            delay(1)
-            progress = 0f
-        }
-    }
+    CircularProgressIndicator(
+        progress = { animatedProgress },
+        strokeWidth = stroke,
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = Color.Transparent,
+        strokeCap = StrokeCap.Butt
+    )
 }
 
 @Composable
