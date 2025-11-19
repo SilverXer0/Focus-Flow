@@ -130,11 +130,14 @@ private fun NumberField(
     value: Int,
     onValue: (Int) -> Unit
 ) {
+    val displayText = if (value == 0) "" else value.toString()
+
     OutlinedTextField(
-        value = value.toString(),
+        value = displayText,
         onValueChange = { txt ->
-            val n = txt.toIntOrNull()
-            if (n != null && n >= 0) {
+            val digitsOnly = txt.filter { it.isDigit() }
+            val n = digitsOnly.toIntOrNull() ?: 0
+            if (n >= 0) {
                 onValue(n)
             }
         },

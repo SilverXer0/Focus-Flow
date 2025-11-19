@@ -67,6 +67,14 @@ fun StatsScreen() {
 
             Text("This week", style = MaterialTheme.typography.titleMedium)
 
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Minutes per day (last 7 days)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -89,11 +97,29 @@ fun StatsScreen() {
                 }
             }
 
-            Text(
-                text = "Tips to stay consistent",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            val dayLabels = listOf("6d", "5d", "4d", "3d", "2d", "1d", "Today")
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                state.weekBars.forEachIndexed { index, _ ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = dayLabels.getOrElse(index) { "" },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }

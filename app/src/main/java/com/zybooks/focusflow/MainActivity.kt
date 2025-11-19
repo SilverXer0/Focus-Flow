@@ -1,5 +1,6 @@
 package com.zybooks.focusflow
 
+import LogScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -81,25 +82,10 @@ fun FocusFlowApp() {
             ) {
                 composable(Routes.HOME) { HomeScreen(nav) }
                 composable(Routes.BREAK) { BreakCoachScreen(nav) }
-                composable(Routes.LOG) { PlaceholderScreen("Sessions Log (coming soon)") }
+                composable(Routes.LOG) { LogScreen() }
                 composable(Routes.STATS) { StatsScreen() }
                 composable(Routes.SETTINGS) { SettingsScreen() }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text(title) }) }
-    ) { inner ->
-        Text(
-            text = "TODO",
-            modifier = Modifier
-                .padding(inner)
-                .padding(24.dp)
-        )
     }
 }
