@@ -12,8 +12,6 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     val focusMinutes: Int = 25,
     val shortBreakMinutes: Int = 5,
-    val longBreakMinutes: Int = 15,
-    val longBreakEvery: Int = 4,
     val autoStartNext: Boolean = false,
     val vibrations: Boolean = true,
     val movementNudge: Boolean = true,
@@ -35,8 +33,6 @@ class SettingsViewModel(
                     it.copy(
                         focusMinutes = settings.focusMinutes,
                         shortBreakMinutes = settings.shortBreakMinutes,
-                        longBreakMinutes = settings.longBreakMinutes,
-                        longBreakEvery = settings.longBreakEvery,
                         autoStartNext = settings.autoStartNext,
                         vibrations = settings.vibrations,
                         movementNudge = settings.movementNudge,
@@ -58,15 +54,6 @@ class SettingsViewModel(
         viewModelScope.launch { repo.updateShortBreakMinutes(min) }
     }
 
-    fun setLongBreakMinutes(min: Int) {
-        _uiState.update { it.copy(longBreakMinutes = min) }
-        viewModelScope.launch { repo.updateLongBreakMinutes(min) }
-    }
-
-    fun setLongBreakEvery(n: Int) {
-        _uiState.update { it.copy(longBreakEvery = n) }
-        viewModelScope.launch { repo.updateLongBreakEvery(n) }
-    }
 
     fun setAutoStart(enabled: Boolean) {
         _uiState.update { it.copy(autoStartNext = enabled) }

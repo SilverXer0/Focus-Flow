@@ -124,7 +124,7 @@ fun HomeScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 AssistChip(onClick = { vm.selectPreset(25, 5) }, label = { Text("25/5") })
                 AssistChip(onClick = { vm.selectPreset(50, 10) }, label = { Text("50/10") })
-                AssistChip(onClick = { nav.navigate(Routes.SETTINGS) }, label = { Text("Custom…") })
+                AssistChip(onClick = { vm.applyCustomFromSettings() }, label = { Text("Custom…") })
             }
 
             Spacer(Modifier.height(22.dp))

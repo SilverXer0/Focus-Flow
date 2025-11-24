@@ -48,16 +48,6 @@ fun SettingsScreen() {
                 value = state.shortBreakMinutes,
                 onValue = { vm.setShortBreakMinutes(it) }
             )
-            NumberField(
-                label = "Long Break (minutes)",
-                value = state.longBreakMinutes,
-                onValue = { vm.setLongBreakMinutes(it) }
-            )
-            NumberField(
-                label = "Long Break Every N Sessions",
-                value = state.longBreakEvery,
-                onValue = { vm.setLongBreakEvery(it) }
-            )
 
             Divider()
 
