@@ -96,8 +96,13 @@ fun HomeScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            val phaseLabel = when (state.phaseType) {
+                TimerPhaseType.Focus -> "Study!"
+                TimerPhaseType.Break -> "Break!"
+            }
+
             Text(
-                text = "Focus",
+                text = phaseLabel,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
